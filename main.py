@@ -1,4 +1,6 @@
 import os
+import argparse
+
 from dotenv import load_dotenv
 from google import genai 
 
@@ -10,13 +12,19 @@ if api_key == None:
 
 client = genai.Client(api_key=api_key)
 
+
+
 def main():
     print("Hello from aiagent!")
+
+    parser = argparse.ArgumentParser(description="ChatBot")
+    parser.add_argument("prompt", type=str, help="User prompt")
+    args = parser.parse_args()
 
     prompt = "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
 
     try:
-        query_aimodel(prompt)
+        query_aimodel(args.prompt)
     except RuntimeError as rte:
         print(f"RuntimeError when querying ai model.\n{rte}")
 
