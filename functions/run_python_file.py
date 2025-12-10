@@ -16,15 +16,23 @@ def run_python_file(working_directory, file_path, args=[]) -> str:
         return f'Error: "{file_path}" is not a Python file.'
 
     try:
-        process_args = ["python3", rel_file_path] + args
-        process = subprocess.run(process_args, capture_output=True, timeout=30)
+        process_args = ["python3", abs_file_path] + args
+        process = subprocess.run(
+            process_args, 
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=abs_working_dir
+        )
+
+        output = []
+        if process.stdout:
+            output.append(f"STDOUT:\n{process.stdout}")
+        if process.stderr:
+            output.append(f"STDERR:\n{process.stderr}")
         if process.returncode != 0:
-            return f"Process exited with code {process.returncode}"
-        if len(process.stdout) > 0:
-            return f"STDOUT: {process.stdout}"
-        if len(process.stderr) > 0:
-            return f"STDERR: {process.stderr}"
-        return "No output produced"
+            output.append(f"Process exited with code {process.returncode}")
+        return "/n".join(output) if output else "No output produced"
 
     except Exception as e:
         return f"Error: executing Python file: {e}"
