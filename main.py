@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+from prompts import system_prompt
+from functions.get_files_info import schema_get_files_info
 
 def main():
     print("Hello from aiagent!")
@@ -15,6 +17,7 @@ def main():
 
     if api_key == None:
         raise RuntimeError(f"environmental variable ({api_key}): not found")
+
 
     client = genai.Client(api_key=api_key)
     
@@ -34,6 +37,9 @@ def main():
             print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
         
         print(response.text)
+        if response.function_calls:
+            for calls in response.function_calls:
+                print(f"Calling function: {calls.name}({calls.args})")
 
     except RuntimeError as rte:
         print(f"RuntimeError when querying ai model.\n{rte}")
@@ -42,9 +48,16 @@ def main():
 
 def query_aimodel(client, prompt) -> genai.types.GenerateContentResponse:
 
+    available_functions = types.Tool(
+        function_declarations=[schema_get_files_info],
+    )
+
     response = client.models.generate_content(
         model='gemini-2.5-flash',
-        contents=prompt
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            tools=[available_functions],
+            system_instruction=system_prompt),
     )
     
     if response.usage_metadata == None:
